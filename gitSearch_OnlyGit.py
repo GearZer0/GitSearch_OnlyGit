@@ -1,35 +1,36 @@
+import git
 import subprocess
 import sys
-import re
-import os
-import git
 
 def get_repo_info(repo_dir):
+    # act like cd to the repo
     repo = git.Repo(repo_dir)
-    
-    # User info
-    user_email = subprocess.run(['git', 'log', '-1', '--pretty=format:"%ae"'], stdout=subprocess.PIPE, cwd=repo_dir).stdout.decode().strip('\"')
-    user_name = subprocess.run(['git', 'log', '-1', '--pretty=format:"%an"'], stdout=subprocess.PIPE, cwd=repo_dir).stdout.decode().strip('\"')
+
+    # User info - not that to get author/ceator of repo requires the use of API
+    user = repo.head.commit.author
     print("User Details:")
-    print("\tLogin:", user_email)
-    print("\tName:", user_name)
-    earliest_commit = subprocess.run(['git', 'log', '--pretty=format:"%ci"', '--author=' + user_email, '--max-parents=0'], stdout=subprocess.PIPE, cwd=repo_dir)
-    print("\tEarliest Commit:", earliest_commit.stdout.decode().splitlines()[-1])
-    latest_commit = subprocess.run(['git', 'log', '-1', '--pretty=format:"%ci"'], stdout=subprocess.PIPE, cwd=repo_dir)
-    print("\tLatest Commit:", latest_commit.stdout.decode().strip('\"'))
+    print("\tLogin:", user.email)
+    print("\tName:", user.name)
+    print("\tEmail:", user.email)
+    # get user ealiest commit thr gitpython lib
+    user_commits = list(repo.iter_commits(author=user.email))
+    first_commit_datetime = user_commits[-1].authored_datetime if user_commits else None
+    print("\tEarliest Commit:", first_commit_datetime)
+    print("\tLatest Commit:", repo.head.commit.committed_datetime)
 
     # Repo info
-    repo_name = subprocess.run(['git', 'rev-parse', '--show-toplevel'], stdout=subprocess.PIPE, cwd=repo_dir).stdout.decode().strip()
     print("\nRepo Details:")
-    print("\tName:", repo_name)
+    print("\tName:", repo.git.rev_parse("--show-toplevel"))
+    # get user ealiest commit thr git -log revsere
     earliest_commit = subprocess.run(['git', 'log', '--pretty=format:"%ci"', '--max-parents=0'], stdout=subprocess.PIPE, cwd=repo_dir)
     print("\tEarliest Commit:", earliest_commit.stdout.decode().splitlines()[-1])
-    latest_commit = subprocess.run(['git', 'log', '-1', '--pretty=format:"%ci"'], stdout=subprocess.PIPE, cwd=repo_dir)
-    print("\tLatest Commit:", latest_commit.stdout.decode().strip('\"'))
+    print("\tLatest Commit:", repo.head.commit.committed_datetime)
+    # Retrieve the "about" section of the repository
+    print("\tRemote Repository URL:", repo.remote().url)
+    print("\tActive Branch Name:", repo.active_branch.name)
     
 
     # Contributor info
-    # using gitpython lib as it git requires the use of regex to extract the info of contributors
     contributors = set()
     print("\nContributor Details:")
     for commit in repo.iter_commits():
