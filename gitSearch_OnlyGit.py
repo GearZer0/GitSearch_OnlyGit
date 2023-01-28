@@ -15,10 +15,6 @@ def get_repo_info(repo_dir):
     print("\tLatest Commit:", repo.head.commit.committed_datetime)
     # get the url of the github repo
     print("\tRemote Repository URL:", repo.remote().url)
-    # get number of branches
-    branches = subprocess.run(['git', 'branch', '-r', '|', 'wc', '-l'], stdout=subprocess.PIPE, cwd=repo_dir)
-    num_branches = int(branches.stdout.decode().strip())
-    print("\tNumber of Branches:", num_branches)
     # get the branch name
     print("\tActive Branch Name:", repo.active_branch.name)
     print()
