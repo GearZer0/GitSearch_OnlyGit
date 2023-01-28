@@ -6,7 +6,24 @@ def get_repo_info(repo_dir):
     # act like cd to the repo
     repo = git.Repo(repo_dir)
 
-    # User info - not that to get author/ceator of repo requires the use of API
+    # Repo info
+    print("\nRepo Details:")
+    print("\tName:", repo.git.rev_parse("--show-toplevel"))
+    # get user ealiest commit thr git -log revsere
+    earliest_commit = subprocess.run(['git', 'log', '--pretty=format:"%ci"', '--max-parents=0'], stdout=subprocess.PIPE, cwd=repo_dir)
+    print("\tEarliest Commit:", earliest_commit.stdout.decode().splitlines()[-1])
+    print("\tLatest Commit:", repo.head.commit.committed_datetime)
+    # get the url of the github repo
+    print("\tRemote Repository URL:", repo.remote().url)
+    # get number of branches
+    branches = subprocess.check_output(['git', 'branch', '-r', '|', 'wc', '-l'], cwd=repo_dir)
+    num_branches = int(branches.strip())
+    print("\tNumber of Branches:", num_branches)
+    # get the branch name
+    print("\tActive Branch Name:", repo.active_branch.name)
+    print()
+    
+    # Creator info - not that to get author/ceator of repo requires the use of API
     user = repo.head.commit.author
     print("User Details:")
     print("\tLogin:", user.email)
@@ -18,17 +35,6 @@ def get_repo_info(repo_dir):
     print("\tEarliest Commit:", first_commit_datetime)
     print("\tLatest Commit:", repo.head.commit.committed_datetime)
 
-    # Repo info
-    print("\nRepo Details:")
-    print("\tName:", repo.git.rev_parse("--show-toplevel"))
-    # get user ealiest commit thr git -log revsere
-    earliest_commit = subprocess.run(['git', 'log', '--pretty=format:"%ci"', '--max-parents=0'], stdout=subprocess.PIPE, cwd=repo_dir)
-    print("\tEarliest Commit:", earliest_commit.stdout.decode().splitlines()[-1])
-    print("\tLatest Commit:", repo.head.commit.committed_datetime)
-    # Retrieve the "about" section of the repository
-    print("\tRemote Repository URL:", repo.remote().url)
-    print("\tActive Branch Name:", repo.active_branch.name)
-    
 
     # Contributor info
     contributors = set()
@@ -45,6 +51,7 @@ def get_repo_info(repo_dir):
             print("\tEarliest Commit:", first_commit_datetime)
             print("\tUpdated At:", commit.committed_datetime)
             print()
+
 
 if __name__ == "__main__":
     # Get the repository link from the command line argument
